@@ -147,6 +147,33 @@
             margin-bottom: 60px;
             /* A soft golden glow behind the heart */
             filter: drop-shadow(0px 15px 30px rgba(212, 175, 55, 0.35));
+            transition: transform 0.3s ease-out;
+        }
+
+        @keyframes heartbeat {
+            0% {
+                transform: scale(1);
+            }
+
+            15% {
+                transform: scale(1.03);
+            }
+
+            30% {
+                transform: scale(1);
+            }
+
+            45% {
+                transform: scale(1.03);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .beating {
+            animation: heartbeat 1.5s infinite ease-in-out;
         }
 
         /* The exact perfect SVG path for a timeless romantic heart */
@@ -226,12 +253,14 @@
         }
 
         .revealed-content .date {
-            font-size: 34px;
+            font-size: 38px;
             font-family: 'Playfair Display', serif;
-            color: #111111;
-            font-weight: 600;
-            letter-spacing: 2px;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            color: #8C6A28;
+            /* Deep elegant gold to match the theme */
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.5), 0 2px 5px rgba(0, 0, 0, 0.15);
+            margin-top: 5px;
         }
 
         /* The scratchable canvas overlay */
@@ -303,7 +332,7 @@
         <div class="stars">✨ ✨ ✨</div>
         <h1 class="title">Save the Date</h1>
 
-        <div class="scratch-wrapper">
+        <div class="scratch-wrapper beating" id="scratchWrapper">
             <!-- The revealed layer entirely contained in a heart mask -->
             <div class="revealed-content heart-mask" id="revealedContent">
                 <div class="wedding-on">wedding on</div>
@@ -331,15 +360,16 @@
 
     <script>
         function addToCalendar() {
-            const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:Wedding of Kirti & Ayush\nDTSTART;VALUE=DATE:20270202\nDTEND;VALUE=DATE:20270203\nDESCRIPTION:Save the Date! Kirti & Ayush Wedding\nEND:VEVENT\nEND:VCALENDAR`;
-            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', 'kirti_ayush_wedding.ics');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // Format: YYYYMMDDTHHMMSSZ (UTC time) or YYYYMMDD/YYYYMMDD for all-day events
+            const startDate = '20270202';
+            const endDate = '20270203';
+            const title = encodeURIComponent('Wedding of Kirti & Ayush');
+            const details = encodeURIComponent('Save the Date! We are excited to celebrate our wedding with you.');
+
+            // Google Calendar Event URL
+            const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}/${endDate}&details=${details}`;
+
+            window.open(googleCalendarUrl, '_blank');
         }
 
         const canvas = document.getElementById('scratchCanvas');
@@ -381,11 +411,14 @@
 
             // Add engraved text right into the gold foil!
             ctx.fillStyle = '#6A4F1D'; // Deep earthy metallic
-            ctx.font = "600 21px 'Montserrat'";
+            ctx.font = "600 22px 'Montserrat'";
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText("SAVE THE", canvas.width / 2, canvas.height / 2 - 16);
-            ctx.fillText("DATE", canvas.width / 2, canvas.height / 2 + 16);
+            ctx.fillText("SAVE THE", canvas.width / 2, canvas.height / 2 - 32);
+            ctx.fillText("DATE", canvas.width / 2, canvas.height / 2 - 2);
+
+            ctx.font = "500 12px 'Montserrat'";
+            ctx.fillText("—  SCRATCH HERE  —", canvas.width / 2, canvas.height / 2 + 28);
 
             // Reset shadow so scratching isn't shadowed
             ctx.shadowColor = "transparent";
@@ -412,6 +445,7 @@
 
         // -- TOUCH EVENTS -- //
         canvas.addEventListener('touchstart', (e) => {
+            document.getElementById('scratchWrapper').classList.remove('beating');
             // e.preventDefault(); // Prevents page scrolling so user can scratch comfortably
             if (isFinished) return;
             isDrawing = true;
@@ -432,6 +466,7 @@
 
         // -- MOUSE EVENTS -- //
         canvas.addEventListener('mousedown', (e) => {
+            document.getElementById('scratchWrapper').classList.remove('beating');
             if (isFinished) return;
             isDrawing = true;
             const pos = getMousePos(e);
